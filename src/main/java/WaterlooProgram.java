@@ -1,21 +1,25 @@
-public class WaterlooProgram {
-    private String focus, title, href, audiences, date, overview;
+import java.io.Serializable;
+import java.util.LinkedList;
+
+public class WaterlooProgram implements Serializable {
+    private String focus, title, href, audiences, overview;
+    private LinkedList<String> dates;
 
     public WaterlooProgram() {
         this.focus = "";
         this.title = "";
         this.href = "";
         this.audiences = "";
-        this.date = "";
+        this.dates = new LinkedList<String>();
         this.overview = "";
     }
 
-    public WaterlooProgram(String focus, String title, String href, String audiences, String date, String overview) {
+    public WaterlooProgram(String focus, String title, String href, String audiences, LinkedList<String> dates, String overview) {
         this.focus = focus;
         this.title = title;
         this.href = href;
         this.audiences = audiences;
-        this.date = date;
+        this.dates = dates;
         this.overview = overview;
     }
 
@@ -35,8 +39,8 @@ public class WaterlooProgram {
         this.audiences = audiences;
     }
 
-    public void setDate(String date) {
-        this.date = date;
+    public void setDates(LinkedList<String> dates) {
+        this.dates = dates;
     }
 
     public void setOverview(String overview) {
@@ -59,8 +63,8 @@ public class WaterlooProgram {
         return audiences;
     }
 
-    public String getDate() {
-        return date;
+    public LinkedList<String> getDates() {
+        return dates;
     }
 
     public String getOverview() {

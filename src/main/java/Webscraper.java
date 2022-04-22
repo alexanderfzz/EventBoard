@@ -6,6 +6,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlParagraph;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 
 public class Webscraper {
@@ -35,7 +36,8 @@ public class Webscraper {
 
             String href = ((DomAttr) page.getByXPath(apath +"/@href").get(0)).getValue();
             String audiences = page.getByXPath(apath + "/ancestor::tr/td[2]/span/text()").get(0).toString();
-            String dates = page.getByXPath(apath + "/ancestor::tr/td[3]/span/text()").get(0).toString();
+            LinkedList<String> dates = new LinkedList<>();
+            dates.add(page.getByXPath(apath + "/ancestor::tr/td[3]/span/text()").get(0).toString());
             String overview = page.getByXPath(apath + "/ancestor::tr/td[4]/span/text()").get(0).toString();
             String focus = page.getByXPath(apath + "/ancestor::tr/th/span/text()").get(0).toString();
 
@@ -89,7 +91,8 @@ public class Webscraper {
 
             String focus = firstPHashMap.get("Campus & Department") == null ? "" : firstPHashMap.get("Campus & Department");
             String audiences = firstPHashMap.get("Age Group") == null ? "" : firstPHashMap.get("Age Group");
-            String dates = firstPHashMap.get("Program Dates") == null ? "" : firstPHashMap.get("Program Dates");
+            LinkedList<String> dates = new LinkedList<>();
+            dates.add(firstPHashMap.get("Program Dates") == null ? "" : firstPHashMap.get("Program Dates"));
 
 //            System.out.println(count +" "+currentTitle);
 //            System.out.println(href);
