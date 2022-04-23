@@ -57,6 +57,7 @@ public class Webscraper {
 
     public UofTProgram[] UofTExtract() throws IOException {
         this.url = "https://future.utoronto.ca/academics/pre-university-programs/enrichment-summer-program-for-high-school-students/";
+        boolean previousJSState = this.webClient.getOptions().isJavaScriptEnabled();
         this.webClient.getOptions().setJavaScriptEnabled(false);
         this.page = this.webClient.getPage(this.url);
 
@@ -104,8 +105,30 @@ public class Webscraper {
 
             programs[count-1] = new UofTProgram(focus, currentTitle, href, audiences, dates, overview);
         }
-
+        this.webClient.getOptions().setJavaScriptEnabled(previousJSState);
         return programs;
     }
 
+    public McMasterProgram[] mcMasterExtract() throws IOException {
+        this.url = "https://youthprograms.eng.mcmaster.ca/programs/list";
+        this.webClient.getOptions().setJavaScriptEnabled(false);
+        this.page = this.webClient.getPage(this.url);
+
+        List<DomText> titles = page.getByXPath("//div[@id = 'news-row']/div/div[@class = 'card']/h2/a/text()");
+        McMasterProgram[] programs = new McMasterProgram[titles.size()];
+        int count = 0;
+
+        for (DomText i : titles) {
+            count++;
+            String currentTitle = i.getWholeText();
+            String apath = String.format("//div[@id = 'news-row']/div/div[@class = 'card']/h2/a[text() = '%s']", currentTitle);
+
+            String href = ((DomAttr) page.getByXPath(apath + "/@href").get(0)).getValue();
+
+            System.out.println(currentTitle);
+            System.out.println(href);
+            System.out.println();
+        }
+        return new McMasterProgram[0];
+    }
 }

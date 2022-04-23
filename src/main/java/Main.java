@@ -7,6 +7,7 @@ public class Main {
         Webscraper webscraper = new Webscraper();
         WaterlooProgram[] listWaterlooProgram = webscraper.waterlooExtract();
         UofTProgram[] listUofTProgram = webscraper.UofTExtract();
+        McMasterProgram[] listMcMasterProgram = webscraper.mcMasterExtract();
         ObjectMapper objectMapper = new ObjectMapper();
 
         //TODO: figure out if java object notation have any use
