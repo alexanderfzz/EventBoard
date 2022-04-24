@@ -12,6 +12,10 @@ public class Main {
         McMasterProgram[] listMcMasterProgram = webscraper.mcMasterExtract();
         ObjectMapper objectMapper = new ObjectMapper();
 
+        for (WaterlooProgram i : listWaterlooProgram) {
+            System.out.println(Toolbox.ObjectToJSON(objectMapper, i));
+        }
+
         //TODO: figure out if java object notation have any use
         //TODO: remove the "and" from the title of the event
     }
