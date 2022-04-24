@@ -18,5 +18,6 @@ public class Main {
 
         //TODO: figure out if java object notation have any use
         //TODO: remove the "and" from the title of the event
+        //TODO: get git ignore working
     }
 }

@@ -8,33 +8,34 @@ public class UofTProgram implements Serializable {
     //focus: department
     //audiences: age group
     //date: program dates
-    private String focus, title, href, audiences, overview;
+    private final String university = "UofT";
+    private String topic, title, link, audiences, overview;
     private LinkedList<String> dates;
 
     public UofTProgram() {
-        this.focus = "";
+        this.topic = "";
         this.title = "";
-        this.href = "";
+        this.link = "";
         this.audiences = "";
         this.dates = new LinkedList<String>();
         this.overview = "";
     }
 
-    public UofTProgram(String focus, String title, String href, String audiences, LinkedList<String> dates, String overview) {
-        this.focus = focus;
+    public UofTProgram(String topic, String title, String link, String audiences, LinkedList<String> dates, String overview) {
+        this.topic = topic;
         this.title = title;
-        this.href = href;
+        this.link = link;
         this.audiences = audiences;
         this.dates = dates;
         this.overview = overview;
     }
 
-    public String getFocus() {
-        return focus;
+    public String getTopic() {
+        return topic;
     }
 
-    public void setFocus(String focus) {
-        this.focus = focus;
+    public void setTopic(String topic) {
+        this.topic = topic;
     }
 
     public String getTitle() {
@@ -45,12 +46,12 @@ public class UofTProgram implements Serializable {
         this.title = title;
     }
 
-    public String getHref() {
-        return href;
+    public String getLink() {
+        return link;
     }
 
-    public void setHref(String href) {
-        this.href = href;
+    public void setLink(String link) {
+        this.link = link;
     }
 
     public String getAudiences() {
