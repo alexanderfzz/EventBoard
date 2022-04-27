@@ -117,7 +117,7 @@ public class Webscraper {
         String[] focusFilter = {"Engineering", "Science", "Math", "Technology", "Coding", "Leaders"};
         focusFilter = Arrays.stream(focusFilter)
                 .map(String::toLowerCase).toArray(String[]::new);
-        Character[] audienceFilter = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '/', '-', 'K'};
+        String[] audienceFilter = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "/", "-", "K", "(", ")"};
 
         List<HtmlListItem> pages = page.getByXPath("//div[@class = 'item-list']/ul/li");
         int totalPages = pages.size()-2 <= 0 ? pages.size() : pages.size()-2;
@@ -142,14 +142,13 @@ public class Webscraper {
                 titleSet.retainAll(focusSet);
                 String focus = String.join("/", titleSet.toArray(new String[0]));
 
-                List<Character> titleFilterList = new LinkedList<>();
-                for (char c : currentTitle.toCharArray()) {
-                    titleFilterList.add(c);
+                String[] titleArray = currentTitle.split(" ");
+                boolean valid = false;
+                for (int index=0; index<audienceFilter.length; index++) {
+                    valid = titleArray[titleArray.length-1].contains(audienceFilter[index]);
+                    if (valid) break;
                 }
-                Set<Character> titleSet2 = new LinkedHashSet<>(titleFilterList);
-                Set<Character> audienceSet = new HashSet<>(Arrays.asList(audienceFilter));
-                titleSet2.retainAll(audienceSet);
-                String audiences = String.join("", titleSet2.stream().map(String::valueOf).toArray(String[]::new));
+                String audiences = valid ? titleArray[titleArray.length-1].replace("(", "").replace(")", "") : "";
 
                 //navigating into the subpage
                 HtmlAnchor subpage = (HtmlAnchor) page.getByXPath(apath).get(0);
