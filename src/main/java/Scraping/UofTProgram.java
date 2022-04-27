@@ -77,4 +77,8 @@ public class UofTProgram implements Serializable {
     public void setOverview(String overview) {
         this.overview = overview;
     }
+
+    public String getUniversity() {
+        return university;
+    }
 }

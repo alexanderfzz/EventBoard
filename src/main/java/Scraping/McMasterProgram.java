@@ -69,6 +69,10 @@ public class McMasterProgram {
         return dates;
     }
 
+    public String getUniversity() {
+        return university;
+    }
+
     public void setDates(LinkedList<String> dates) {
         this.dates = dates;
     }

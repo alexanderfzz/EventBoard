@@ -73,4 +73,8 @@ public class WaterlooProgram implements Serializable {
     public String getOverview() {
         return overview;
     }
+
+    public String getUniversity() {
+        return university;
+    }
 }
