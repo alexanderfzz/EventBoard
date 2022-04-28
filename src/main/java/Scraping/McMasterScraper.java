@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class McMasterScraper  implements Runnable{
+public class McMasterScraper  implements Runnable {
     private WebClient webClient;
     private HtmlPage page;
     private String url;
