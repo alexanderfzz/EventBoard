@@ -25,7 +25,8 @@ public class Webscraper {
         this.page = this.webClient.getPage(this.url);
 
         List<DomText> titles = page.getByXPath("//table[@class = 'tablesaw tablesaw-stack']/tbody/tr/td[1]/span/a/text()");
-        WaterlooProgram[] programs = new WaterlooProgram[titles.size()];
+        LinkedList<WaterlooProgram> programs = new LinkedList<>();
+        Set<String> hrefSet = new HashSet<>();
         int count = 0;
 
         for (DomText i : titles) {
@@ -48,9 +49,11 @@ public class Webscraper {
 //            System.out.println(focus);
 //            System.out.println();
 
-            programs[count-1] = new WaterlooProgram(focus, currentTitle, href, audiences, dates, overview);
+            if (Toolbox.isADupelicate(hrefSet, href)) {
+                programs.add(new WaterlooProgram(focus, currentTitle, href, audiences, dates, overview));
+            }
         }
-        return programs;
+        return programs.toArray(WaterlooProgram[]::new);
     }
 
 
@@ -61,7 +64,8 @@ public class Webscraper {
         this.page = this.webClient.getPage(this.url);
 
         List<DomText> titles = page.getByXPath("//div[@class = 'container']/div[@class = 'row']//main/h3//a/text()");
-        UofTProgram[] programs = new UofTProgram[titles.size()];
+        LinkedList<UofTProgram> programs = new LinkedList<>();
+        Set<String> hrefSet = new HashSet<>();
         int count = 0;
 
         for (DomText i : titles) {
@@ -102,15 +106,18 @@ public class Webscraper {
 //            System.out.println(focus);
 //            System.out.println();
 
-            programs[count-1] = new UofTProgram(focus, currentTitle, href, audiences, dates, overview);
+            if (Toolbox.isADupelicate(hrefSet, href)) {
+                programs.add(new UofTProgram(focus, currentTitle, href, audiences, dates, overview));
+            }
         }
         this.webClient.getOptions().setJavaScriptEnabled(previousJSState);
-        return programs;
+        return programs.toArray(UofTProgram[]::new);
     }
 
 
     public McMasterProgram[] mcMasterExtract() throws IOException {
         this.url = "https://youthprograms.eng.mcmaster.ca/programs/list";
+        boolean previousJSState = this.webClient.getOptions().isJavaScriptEnabled();
         this.webClient.getOptions().setJavaScriptEnabled(false);
         this.page = this.webClient.getPage(this.url);
 
@@ -123,6 +130,7 @@ public class Webscraper {
         int totalPages = pages.size()-2 <= 0 ? pages.size() : pages.size()-2;
         int count = 0;
         LinkedList<McMasterProgram> programs = new LinkedList<>();
+        Set<String> hrefSet = new HashSet<>();
         for (int i=0; i<totalPages; i++) {
             if (i!=0) {
                 HtmlAnchor nextPage = (HtmlAnchor) page.getByXPath("//div[@class = 'item-list']/ul/li[" + (i+1) + "]/a").get(0);
@@ -164,8 +172,10 @@ public class Webscraper {
 
                 //exit subpage
                 this.page = masterpage;
-                programs.add(new McMasterProgram(focus, currentTitle, href, audiences, dates, overview));
 
+                if (Toolbox.isADupelicate(hrefSet, href)) {
+                    programs.add(new McMasterProgram(focus, currentTitle, href, audiences, dates, overview));
+                }
 
 //                System.out.println(currentTitle);
 //                System.out.println(href);
@@ -177,7 +187,7 @@ public class Webscraper {
 
             }
         }
-
+        this.webClient.getOptions().setJavaScriptEnabled(previousJSState);
         return programs.toArray(McMasterProgram[]::new);
     }
 }
