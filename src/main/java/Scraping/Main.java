@@ -6,24 +6,23 @@ import java.io.IOException;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        Webscraper webscraper = new Webscraper();
-        WaterlooProgram[] listWaterlooProgram = webscraper.waterlooExtract();
-        UofTProgram[] listUofTProgram = webscraper.UofTExtract();
-        McMasterProgram[] listMcMasterProgram = webscraper.mcMasterExtract();
+        McMasterScraper mcMasterScraper = new McMasterScraper();
+        Thread mcMasterScrapeThread = new Thread(mcMasterScraper);
+        mcMasterScrapeThread.start();
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        for (WaterlooProgram i : listWaterlooProgram) {
-            System.out.println(Toolbox.ObjectToJSON(objectMapper, i));
-        }
-        for (UofTProgram i : listUofTProgram) {
-            System.out.println(Toolbox.ObjectToJSON(objectMapper, i));
-        }
-        for (McMasterProgram i : listMcMasterProgram) {
-            System.out.println(Toolbox.ObjectToJSON(objectMapper, i));
-        }
+        WaterlooScraper waterlooScraper = new WaterlooScraper();
+        Thread waterlooScrapeThread = new Thread(waterlooScraper);
+        waterlooScrapeThread.start();
+
+        UofTScraper uofTScraper = new UofTScraper();
+        Thread uOfTScrapeThread = new Thread(uofTScraper);
+        uOfTScrapeThread.start();
+
 
         //TODO: remove the "and" from the title of the waterloo event
         //TODO: McMaster audience better parsing (extract information from other sources than the title)
-        //TODO: scrape concurrently
+        //TODO: figure out why waterloo and mcmaster together cause warning log from client-id thread
+        //TODO: learn Callable interface
+        //TODO: if possible improve efficiency of mcmaster scrape, or somehow do multithreading for mcmaster scrape
     }
 }
