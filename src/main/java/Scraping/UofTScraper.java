@@ -15,7 +15,7 @@ public class UofTScraper implements Runnable {
     private WebClient webClient;
     private HtmlPage page;
     private String url;
-    private UofTProgram[] programs;
+    private Program[] programs;
 
     public UofTScraper() throws IOException {
         this.webClient = new WebClient();
@@ -28,7 +28,7 @@ public class UofTScraper implements Runnable {
     @Override
     public void run() {
         List<DomText> titles = page.getByXPath("//div[@class = 'container']/div[@class = 'row']//main/h3//a/text()");
-        LinkedList<UofTProgram> programList = new LinkedList<>();
+        LinkedList<Program> programList = new LinkedList<>();
         Set<String> hrefSet = new HashSet<>();
 
         for (DomText i : titles) {
@@ -69,10 +69,10 @@ public class UofTScraper implements Runnable {
 //            System.out.println();
 
             if (Toolbox.isADupelicate(hrefSet, href)) {
-                programList.add(new UofTProgram(focus, currentTitle, href, audiences, dates, overview));
+                programList.add(new Program("UofT", focus, currentTitle, href, audiences, dates, overview));
             }
         }
-        this.programs = programList.toArray(UofTProgram[]::new);
+        this.programs = programList.toArray(Program[]::new);
         try {
             this.export();
         } catch (JsonProcessingException e) {
@@ -82,7 +82,7 @@ public class UofTScraper implements Runnable {
 
     public void export() throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
-        for (UofTProgram i : this.programs) {
+        for (Program i : this.programs) {
             System.out.println(Toolbox.ObjectToJSON(objectMapper, i));
         }
     }

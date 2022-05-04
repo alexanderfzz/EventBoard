@@ -1,18 +1,14 @@
 package Scraping;
 
-import java.io.Serializable;
 import java.util.LinkedList;
 
-public class UofTProgram implements Serializable {
-
-    //focus: department
-    //audiences: age group
-    //date: program dates
-    private final String university = "UofT";
+public class Program {
+    private final String university;
     private String topic, title, link, audiences, overview;
     private LinkedList<String> dates;
 
-    public UofTProgram() {
+    public Program() {
+        this.university = "";
         this.topic = "";
         this.title = "";
         this.link = "";
@@ -21,13 +17,18 @@ public class UofTProgram implements Serializable {
         this.overview = "";
     }
 
-    public UofTProgram(String topic, String title, String link, String audiences, LinkedList<String> dates, String overview) {
+    public Program(String university, String topic, String title, String link, String audiences, LinkedList<String> dates, String overview) {
+        this. university = university;
         this.topic = topic;
         this.title = title;
         this.link = link;
         this.audiences = audiences;
         this.dates = dates;
         this.overview = overview;
+    }
+
+    public String getUniversity() {
+        return university;
     }
 
     public String getTopic() {
@@ -62,14 +63,6 @@ public class UofTProgram implements Serializable {
         this.audiences = audiences;
     }
 
-    public LinkedList<String> getDates() {
-        return dates;
-    }
-
-    public void setDates(LinkedList<String> dates) {
-        this.dates = dates;
-    }
-
     public String getOverview() {
         return overview;
     }
@@ -78,7 +71,11 @@ public class UofTProgram implements Serializable {
         this.overview = overview;
     }
 
-    public String getUniversity() {
-        return university;
+    public LinkedList<String> getDates() {
+        return dates;
+    }
+
+    public void setDates(LinkedList<String> dates) {
+        this.dates = dates;
     }
 }

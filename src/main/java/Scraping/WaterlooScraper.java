@@ -17,7 +17,7 @@ public class WaterlooScraper implements Runnable {
     private WebClient webClient;
     private HtmlPage page;
     private String url;
-    private WaterlooProgram[] programs;
+    private Program[] programs;
 
     public WaterlooScraper() throws IOException {
         this.webClient = new WebClient();
@@ -30,7 +30,7 @@ public class WaterlooScraper implements Runnable {
     @Override
     public void run() {
         List<DomText> titles = page.getByXPath("//table[@class = 'tablesaw tablesaw-stack']/tbody/tr/td[1]/a/text()");
-        LinkedList<WaterlooProgram> programList = new LinkedList<>();
+        LinkedList<Program> programList = new LinkedList<>();
         Set<String> hrefSet = new HashSet<>();
 
         for (DomText i : titles) {
@@ -53,10 +53,10 @@ public class WaterlooScraper implements Runnable {
 //            System.out.println();
 
             if (Toolbox.isADupelicate(hrefSet, href)) {
-                programList.add(new WaterlooProgram(focus, currentTitle, href, audiences, dates, overview));
+                programList.add(new Program("Waterloo", focus, currentTitle, href, audiences, dates, overview));
             }
         }
-        this.programs = programList.toArray(WaterlooProgram[]::new);
+        this.programs = programList.toArray(Program[]::new);
         try {
             this.export();
         } catch (JsonProcessingException e) {
@@ -66,7 +66,7 @@ public class WaterlooScraper implements Runnable {
 
     public void export() throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
-        for (WaterlooProgram i : this.programs) {
+        for (Program i : this.programs) {
             System.out.println(Toolbox.ObjectToJSON(objectMapper, i));
         }
     }

@@ -16,7 +16,7 @@ public class McMasterScraper  implements Runnable {
     private WebClient webClient;
     private HtmlPage page;
     private String url;
-    private McMasterProgram[] programs;
+    private Program[] programs;
 
     public McMasterScraper() throws IOException {
         this.webClient = new WebClient();
@@ -35,7 +35,7 @@ public class McMasterScraper  implements Runnable {
 
         List<HtmlListItem> pages = page.getByXPath("//div[@class = 'item-list']/ul/li");
         int totalPages = pages.size()-2 <= 0 ? pages.size() : pages.size()-2;
-        LinkedList<McMasterProgram> programList = new LinkedList<>();
+        LinkedList<Program> programList = new LinkedList<>();
         Set<String> hrefSet = new HashSet<>();
         for (int i=0; i<totalPages; i++) {
             if (i!=0) {
@@ -95,11 +95,11 @@ public class McMasterScraper  implements Runnable {
 //                System.out.println();
 
                 if (Toolbox.isADupelicate(hrefSet, href)) {
-                    programList.add(new McMasterProgram(focus, currentTitle, href, audiences, dates, overview));
+                    programList.add(new Program("McMaster", focus, currentTitle, href, audiences, dates, overview));
                 }
             }
         }
-        this.programs = programList.toArray(McMasterProgram[]::new);
+        this.programs = programList.toArray(Program[]::new);
         try {
             this.export();
         } catch (JsonProcessingException e) {
@@ -109,7 +109,7 @@ public class McMasterScraper  implements Runnable {
 
     public void export() throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
-        for (McMasterProgram i : this.programs) {
+        for (Program i : this.programs) {
             System.out.println(Toolbox.ObjectToJSON(objectMapper, i));
         }
     }
