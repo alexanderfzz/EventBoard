@@ -16,7 +16,6 @@ public class McMasterScraper  implements Runnable {
     private WebClient webClient;
     private HtmlPage page;
     private String url;
-    private Program[] programs;
 
     public McMasterScraper() throws IOException {
         this.webClient = new WebClient();
@@ -28,24 +27,57 @@ public class McMasterScraper  implements Runnable {
 
     @Override
     public void run() {
-        String[] focusFilter = {"Engineering", "Science", "Math", "Technology", "Coding", "Leaders"};
-        focusFilter = Arrays.stream(focusFilter)
-                .map(String::toLowerCase).toArray(String[]::new);
-        String[] audienceFilter = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "/", "-", "K", "(", ")"};
-
         List<HtmlListItem> pages = page.getByXPath("//div[@class = 'item-list']/ul/li");
         int totalPages = pages.size()-2 <= 0 ? pages.size() : pages.size()-2;
-        LinkedList<Program> programList = new LinkedList<>();
-        Set<String> hrefSet = new HashSet<>();
         for (int i=0; i<totalPages; i++) {
-            if (i!=0) {
-                HtmlAnchor nextPage = (HtmlAnchor) page.getByXPath("//div[@class = 'item-list']/ul/li[" + (i+1) + "]/a").get(0);
-                try {
-                    this.page = nextPage.click();
-                } catch (IOException e) {
-                    e.printStackTrace();
+            try {
+                if (i==0) {
+                    McMasterPageScraper mcMasterPageScraper = new McMasterPageScraper(this.url);
+                    Thread pageScraper = new Thread(mcMasterPageScraper);
+                    pageScraper.start();
+                } else {
+                    HtmlAnchor subpage = (HtmlAnchor) page.getByXPath("//div[@class = 'item-list']/ul/li[" + (i+1) + "]/a").get(0);
+                    HtmlPage masterpage = this.page.getPage();
+                    try {
+                        this.page = subpage.click();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    McMasterPageScraper mcMasterPageScraper = new McMasterPageScraper(this.page.getUrl().toString());
+                    Thread pageScraper = new Thread(mcMasterPageScraper);
+                    pageScraper.start();
+                    this.page = masterpage;
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
+        }
+    }
+
+
+    public static class McMasterPageScraper implements Runnable {
+        private WebClient webClient;
+        private HtmlPage page;
+        private String url;
+        private Program[] programs;
+
+        public McMasterPageScraper(String url) throws IOException {
+            this.webClient = new WebClient();
+            this.webClient.getOptions().setCssEnabled(false);
+            this.webClient.getOptions().setJavaScriptEnabled(false);
+            this.url = url;
+            this.page = this.webClient.getPage(this.url);
+        }
+
+        @Override
+        public void run() {
+            String[] focusFilter = {"Engineering", "Science", "Math", "Technology", "Coding", "Leaders"};
+            focusFilter = Arrays.stream(focusFilter)
+                    .map(String::toLowerCase).toArray(String[]::new);
+            String[] audienceFilter = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "/", "-", "K", "(", ")"};
+
+            LinkedList<Program> programList = new LinkedList<>();
+            Set<String> hrefSet = new HashSet<>();
 
             List<DomText> titles = page.getByXPath("//div[@id = 'news-row']/div/div[@class = 'card']/h2/a/text()");
 
@@ -98,19 +130,19 @@ public class McMasterScraper  implements Runnable {
                     programList.add(new Program("McMaster", focus, currentTitle, href, audiences, dates, overview));
                 }
             }
+            this.programs = programList.toArray(Program[]::new);
+            try {
+                this.export();
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
         }
-        this.programs = programList.toArray(Program[]::new);
-        try {
-            this.export();
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-    }
 
-    public void export() throws JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        for (Program i : this.programs) {
-            System.out.println(Toolbox.ObjectToJSON(objectMapper, i));
+        public void export() throws JsonProcessingException {
+            ObjectMapper objectMapper = new ObjectMapper();
+            for (Program i : this.programs) {
+                System.out.println(Toolbox.ObjectToJSON(objectMapper, i));
+            }
         }
     }
 }
