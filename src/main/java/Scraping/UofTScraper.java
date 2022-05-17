@@ -15,7 +15,8 @@ public class UofTScraper implements Runnable {
     private WebClient webClient;
     private HtmlPage page;
     private String url;
-    private Program[] programs;
+    private static final List<Program> programs = new LinkedList<>();
+    private static final Set<String> hrefSet = new HashSet<>();
 
     public UofTScraper() throws IOException {
         this.webClient = new WebClient();
@@ -28,8 +29,6 @@ public class UofTScraper implements Runnable {
     @Override
     public void run() {
         List<DomText> titles = page.getByXPath("//div[@class = 'container']/div[@class = 'row']//main/h3//a/text()");
-        LinkedList<Program> programList = new LinkedList<>();
-        Set<String> hrefSet = new HashSet<>();
 
         for (DomText i : titles) {
             String currentTitle = i.getWholeText();
@@ -60,19 +59,10 @@ public class UofTScraper implements Runnable {
             LinkedList<String> dates = new LinkedList<>();
             dates.add(firstPHashMap.get("Program Dates") == null ? "" : firstPHashMap.get("Program Dates"));
 
-//            System.out.println(count +" "+currentTitle);
-//            System.out.println(href);
-//            System.out.println(audiences);
-//            System.out.println(dates);
-//            System.out.println(overview);
-//            System.out.println(focus);
-//            System.out.println();
-
-            if (Toolbox.isADupelicate(hrefSet, href)) {
-                programList.add(new Program("UofT", focus, currentTitle, href, audiences, dates, overview));
+            if (Toolbox.isADuplicate(hrefSet, href)) {
+                programs.add(new Program("UofT", focus, currentTitle, href, audiences, dates, overview));
             }
         }
-        this.programs = programList.toArray(Program[]::new);
         try {
             this.export();
         } catch (JsonProcessingException e) {
@@ -82,8 +72,10 @@ public class UofTScraper implements Runnable {
 
     public void export() throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
-        for (Program i : this.programs) {
-            System.out.println(Toolbox.ObjectToJSON(objectMapper, i));
+        synchronized (programs) {
+            for (Program i : programs) {
+                System.out.println(Toolbox.ObjectToJSON(objectMapper, i));
+            }
         }
     }
 }

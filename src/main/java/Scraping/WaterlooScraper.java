@@ -8,16 +8,14 @@ import com.gargoylesoftware.htmlunit.html.DomText;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class WaterlooScraper implements Runnable {
     private WebClient webClient;
     private HtmlPage page;
     private String url;
-    private Program[] programs;
+    private static final List<Program> programs = new LinkedList<>();
+    private static final Set<String> hrefSet = new HashSet<>();
 
     public WaterlooScraper() throws IOException {
         this.webClient = new WebClient();
@@ -30,8 +28,6 @@ public class WaterlooScraper implements Runnable {
     @Override
     public void run() {
         List<DomText> titles = page.getByXPath("//table[@class = 'tablesaw tablesaw-stack']/tbody/tr/td[1]/a/text()");
-        LinkedList<Program> programList = new LinkedList<>();
-        Set<String> hrefSet = new HashSet<>();
 
         for (DomText i : titles) {
             String currentTitle = i.getWholeText();
@@ -44,19 +40,10 @@ public class WaterlooScraper implements Runnable {
             String overview = page.getByXPath(apath + "/ancestor::tr/td[4]/text()").get(0).toString();
             String focus = page.getByXPath(apath + "/ancestor::tr/th/text()").get(0).toString();
 
-//            System.out.println(currentTitle);
-//            System.out.println(href);
-//            System.out.println(audiences);
-//            System.out.println(dates);
-//            System.out.println(overview);
-//            System.out.println(focus);
-//            System.out.println();
-
-            if (Toolbox.isADupelicate(hrefSet, href)) {
-                programList.add(new Program("Waterloo", focus, currentTitle, href, audiences, dates, overview));
+            if (Toolbox.isADuplicate(hrefSet, href)) {
+                programs.add(new Program("Waterloo", focus, currentTitle, href, audiences, dates, overview));
             }
         }
-        this.programs = programList.toArray(Program[]::new);
         try {
             this.export();
         } catch (JsonProcessingException e) {
@@ -66,8 +53,10 @@ public class WaterlooScraper implements Runnable {
 
     public void export() throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
-        for (Program i : this.programs) {
-            System.out.println(Toolbox.ObjectToJSON(objectMapper, i));
+        synchronized (programs) {
+            for (Program i : programs) {
+                System.out.println(Toolbox.ObjectToJSON(objectMapper, i));
+            }
         }
     }
 }
