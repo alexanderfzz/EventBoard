@@ -2,7 +2,6 @@ package Scraping;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.gargoylesoftware.htmlunit.BrowserVersion;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.DomText;
 import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
@@ -37,10 +36,8 @@ public class McMasterScraper implements Runnable {
 
         try {
             for (int i=0; i<totalPages; i++) {
-                McMasterPageScraper mcMasterPageScraper;
-                Thread pageScraperThread;
-                mcMasterPageScraper = new McMasterPageScraper("https://youthprograms.eng.mcmaster.ca/programs/list?page="+i);
-                pageScraperThread = new Thread(mcMasterPageScraper);
+                McMasterPageScraper mcMasterPageScraper = new McMasterPageScraper("https://youthprograms.eng.mcmaster.ca/programs/list?page="+i);
+                Thread pageScraperThread = new Thread(mcMasterPageScraper);
                 threads.add(pageScraperThread);
                 pageScraperThread.start();
             }
@@ -48,7 +45,6 @@ public class McMasterScraper implements Runnable {
                 thread.join();
             }
             export();
-            System.out.println(programs.size());
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
@@ -59,6 +55,10 @@ public class McMasterScraper implements Runnable {
         for (Program i : programs) {
             System.out.println(Toolbox.ObjectToJSON(objectMapper, i));
         }
+    }
+
+    public static List<Program> getPrograms() {
+        return programs;
     }
 
 
@@ -119,7 +119,7 @@ public class McMasterScraper implements Runnable {
                 //nav back to masterPage
                 this.page = masterPage;
 
-                if (Toolbox.isADuplicate(hrefSet, href)) {
+                if (Toolbox.isNotDuplicate(hrefSet, href)) {
                     programs.add(new Program("McMaster", focus, currentTitle, href, audiences, dates, overview));
                 }
             }

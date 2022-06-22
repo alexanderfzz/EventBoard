@@ -8,6 +8,7 @@ public class Main {
     public static WaterlooScraper waterlooScraper;
     public static UofTScraper uofTScraper;
     public static McMasterScraper mcMasterScraper;
+    public static UBCScraper ubcScraper;
 
     public static void main(String[] args) throws IOException {
         waterlooScraper = new WaterlooScraper();
@@ -22,11 +23,16 @@ public class Main {
         Thread mcMasterScrapeThread = new Thread(mcMasterScraper);
         mcMasterScrapeThread.start();
 
+        ubcScraper = new UBCScraper();
+        Thread ubcScraperThread = new Thread(ubcScraper);
+        ubcScraperThread.start();
+
         //OPTIMIZE: remove the "and" from the title of the waterloo event
 
         //TODO: learn Callable interface
+        //TODO: create word filter for UBC focus
 
         //FIXME: AHHHHHHHHHHHHH!! While it's true that age is no guarantee of efficiency, and youth is no guarantee of innovation
-        //   youth however, is a guarantee of insanity, typing from experience...
+
     }
 }

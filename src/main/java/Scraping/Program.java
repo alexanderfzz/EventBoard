@@ -18,7 +18,7 @@ public class Program {
     }
 
     public Program(String university, String topic, String title, String link, String audiences, LinkedList<String> dates, String overview) {
-        this. university = university;
+        this.university = university;
         this.topic = topic;
         this.title = title;
         this.link = link;

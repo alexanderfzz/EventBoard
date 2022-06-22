@@ -59,7 +59,7 @@ public class UofTScraper implements Runnable {
             LinkedList<String> dates = new LinkedList<>();
             dates.add(firstPHashMap.get("Program Dates") == null ? "" : firstPHashMap.get("Program Dates"));
 
-            if (Toolbox.isADuplicate(hrefSet, href)) {
+            if (Toolbox.isNotDuplicate(hrefSet, href)) {
                 programs.add(new Program("UofT", focus, currentTitle, href, audiences, dates, overview));
             }
         }
@@ -72,10 +72,12 @@ public class UofTScraper implements Runnable {
 
     public void export() throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
-        synchronized (programs) {
-            for (Program i : programs) {
-                System.out.println(Toolbox.ObjectToJSON(objectMapper, i));
-            }
+        for (Program i : programs) {
+            System.out.println(Toolbox.ObjectToJSON(objectMapper, i));
         }
+    }
+
+    public static List<Program> getPrograms() {
+        return programs;
     }
 }
