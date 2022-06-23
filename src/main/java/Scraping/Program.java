@@ -4,7 +4,7 @@ import java.util.LinkedList;
 
 public class Program {
     private final String university;
-    private String topic, title, link, audiences, overview;
+    private String topic, title, link, audiences, overview, formattedDate;
     private LinkedList<String> dates;
 
     public Program() {
@@ -26,7 +26,19 @@ public class Program {
         this.dates = dates;
         this.overview = overview;
     }
+    public Program(String university, String topic, String title, String link, String audiences, String date, String overview) {
+        this.university = university;
+        this.topic = topic;
+        this.title = title;
+        this.link = link;
+        this.audiences = audiences;
+        this.formattedDate = date;
+        this.overview = overview;
+    }
 
+    public String getFormattedDate() {
+        return formattedDate;
+    }
     public String getUniversity() {
         return university;
     }
@@ -71,8 +83,11 @@ public class Program {
         this.overview = overview;
     }
 
-    public LinkedList<String> getDates() {
-        return dates;
+    public String getDates() {
+        if(dates.isEmpty() || dates.get(0).equals("")){
+            return "Undetermined";
+        }
+        return "".join(",", dates);
     }
 
     public void setDates(LinkedList<String> dates) {
