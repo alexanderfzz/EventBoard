@@ -106,7 +106,7 @@ public class ProgramDAO extends JdbcDaoSupport {
                         "', '" +
                         program.getAudiences() +
                         "', '" +
-                        program.getOverview() +
+                        program.getOverview().replaceAll("'", "''") +
                         "', '" +
                         program.getDates() +
                         "')";

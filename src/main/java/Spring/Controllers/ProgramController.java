@@ -47,10 +47,10 @@ public class ProgramController {
         }
 
         //Adds everything (WILL BE MOVED SERVERSIDE LATER)
-        //programDAO.addPrograms(waterlooScraper.getPrograms()); //This will not work until I fix something with SQL
-        //programDAO.addPrograms(McMasterScraper.getPrograms());
-        //programDAO.addPrograms(UofTScraper.getPrograms());
-        //programDAO.addPrograms(uBCScraper.getPrograms());
+        programDAO.addPrograms(waterlooScraper.getPrograms());
+        programDAO.addPrograms(McMasterScraper.getPrograms());
+        programDAO.addPrograms(UofTScraper.getPrograms());
+        programDAO.addPrograms(uBCScraper.getPrograms());
 
         List<Program> allPrograms = programDAO.getAllPrograms();
 
