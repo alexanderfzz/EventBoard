@@ -15,6 +15,32 @@ public class UBCScraper implements Runnable {
     private String url;
     private static final List<Program> programs = Collections.synchronizedList(new LinkedList<>());
     private static final Set<String> hrefSet = ConcurrentHashMap.newKeySet();
+    private static final HashMap<String, String> focusFilter = new HashMap<>();
+
+    static {
+        focusFilter.put("digital media", "Digital Media");
+        focusFilter.put("entrepreneurship", "Business");
+        focusFilter.put("business", "Business");
+        focusFilter.put("economy", "Business");
+        focusFilter.put("finance", "Business");
+        focusFilter.put("video game", "Business");
+        focusFilter.put("artificial intelligence", "Computer Science");
+        focusFilter.put("machine learning", "Computer Science");
+        focusFilter.put(" ai", "Computer Science");
+        focusFilter.put("ai ", "Computer Science");
+        focusFilter.put("python", "Computer Science");
+        focusFilter.put("data analysis", "Computer Science");
+        focusFilter.put("science", "Science");
+        focusFilter.put("engineering", "Engineering");
+        focusFilter.put("health", "Health");
+        focusFilter.put("politics", "Politics");
+        focusFilter.put("art", "Art");
+        focusFilter.put("crime", "Social Science");
+        focusFilter.put("society", "Social Science");
+        focusFilter.put("social", "Social Science");
+        focusFilter.put("philosophy", "Social Science");
+        focusFilter.put("psychology", "Social Science");
+    }
 
     public UBCScraper() throws IOException {
         this.webClient = new WebClient();
@@ -28,12 +54,12 @@ public class UBCScraper implements Runnable {
     public void run() {
         LinkedList<Thread> threads = new LinkedList<>();
         try {
-            UBCOnlineScraper ubcOnlineScraper = new UBCOnlineScraper();
-            Thread onlineScraperThread = new Thread(ubcOnlineScraper);
+            UBCOnlineScraper uBCOnlineScraper = new UBCOnlineScraper();
+            Thread onlineScraperThread = new Thread(uBCOnlineScraper);
             threads.add(onlineScraperThread);
             onlineScraperThread.start();
-            UBCOnCampusScraper ubcOnCampusScraper = new UBCOnCampusScraper();
-            Thread onCampusScraperThread = new Thread(ubcOnCampusScraper);
+            UBCOnCampusScraper uBCOnCampusScraper = new UBCOnCampusScraper();
+            Thread onCampusScraperThread = new Thread(uBCOnCampusScraper);
             threads.add(onCampusScraperThread);
             onCampusScraperThread.start();
             for (Thread thread : threads) {
@@ -58,7 +84,21 @@ public class UBCScraper implements Runnable {
             DomText lastDate = page.getFirstByXPath("//section/div/div/div[2]/div[" + (i + 1) + "]/div/span/div[1]/span[2]/text()");
             dates.add(firstDate.getWholeText() + "-" + lastDate);
         }
+        if (topic.equals("")) {
+            topic = applyFocusFilter(title);
+        }
         programs.add(new Program("UBC", topic, format + " " + title, page.getBaseURI(), audiences, dates, overview));
+    }
+
+    public static String applyFocusFilter(String title) {
+        //TODO: this
+        Set<String> focusSet = new HashSet<>();
+        for (String keyword : focusFilter.keySet()) {
+            if (title.toLowerCase().contains(keyword)) {
+                focusSet.add(focusFilter.get(keyword));
+            }
+        }
+        return String.join("/",focusSet);
     }
 
     public void export() throws JsonProcessingException {
@@ -109,7 +149,7 @@ public class UBCScraper implements Runnable {
                     while (iter.hasNext()) {
                         DomElement currentChildNode = iter.next();
                         DomElement a = currentChildNode.getFirstElementChild();
-                        if (a!=null && Toolbox.isNotDuplicate(hrefSet, "https://extendedlearning.ubc.ca" + a.getAttribute("href"))) {
+                        if (a != null && Toolbox.isNotDuplicate(hrefSet, "https://extendedlearning.ubc.ca" + a.getAttribute("href"))) {
                             baseScrape(webClient.getPage("https://extendedlearning.ubc.ca" + a.getAttribute("href")), currentFocus, "(On-Campus)");
                         }
                     }

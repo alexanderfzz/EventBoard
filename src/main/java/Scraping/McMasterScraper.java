@@ -66,8 +66,8 @@ public class McMasterScraper implements Runnable {
         private WebClient webClient;
         private HtmlPage page;
         private String url;
-        private String[] focusFilter = {"Engineering", "Science", "Math", "Technology", "Coding", "Leaders"};
-        private String[] audienceFilter = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "/", "-", "K", "(", ")"};
+        private final Set<String> focusFilter = new HashSet<>(List.of(new String[]{"engineering", "science", "math", "technology", "coding", "leaders"}));
+        private final String[] audienceFilter = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "/", "-", "K", "(", ")"};
 
         public McMasterPageScraper(String url) throws IOException {
             this.webClient = new WebClient();
@@ -84,12 +84,9 @@ public class McMasterScraper implements Runnable {
                 String currentTitle = j.getWholeText();
                 String apath = String.format("//div[@id = 'news-row']/div/div[@class = 'card']/h2/a[text() = '%s']", currentTitle);
 
-                focusFilter = Arrays.stream(focusFilter).map(String::toLowerCase).toArray(String[]::new);
-
                 //intersection
                 Set<String> titleSet = new HashSet<>(Arrays.asList(currentTitle.toLowerCase().split(" ")));
-                Set<String> focusSet = new HashSet<>(Arrays.asList(focusFilter));
-                titleSet.retainAll(focusSet);
+                titleSet.retainAll(focusFilter);
                 String focus = String.join("/", titleSet.toArray(new String[0]));
 
                 String[] titleArray = currentTitle.split(" ");

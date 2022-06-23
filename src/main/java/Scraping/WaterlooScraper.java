@@ -42,7 +42,7 @@ public class WaterlooScraper implements Runnable {
             String focus = ((HtmlElement) page.getByXPath(apath + "/ancestor::tr/th").get(0)).getTextContent();
 
             if (Toolbox.isNotDuplicate(hrefSet, href)) {
-                programs.add(new Program("Waterloo", focus, currentTitle, href, audiences, dates, overview));
+                programs.add(new Program("Waterloo", focus, currentTitle.replace("and", "").trim(), href, audiences, dates, overview));
             }
         }
         try {

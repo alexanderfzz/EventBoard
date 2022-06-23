@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.jdbc.core.support.JdbcDaoSupport;
 
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
 
 @Controller
@@ -26,24 +27,37 @@ public class ProgramController {
         programDAO = new ProgramDAO(DataBaseConfig.dataSource(), DataBaseConfig.jdbcTemplate());
         System.out.println("LAMOAMAOMAMOAOS");
 
+        LinkedList<Thread> scraperThreads = new LinkedList<>();
+
         WaterlooScraper waterlooScraper = new WaterlooScraper();
         Thread waterlooThread = new Thread(waterlooScraper);
+        scraperThreads.add(waterlooThread);
         waterlooThread.start();
 
         UofTScraper uofTScraper = new UofTScraper();
         Thread uOfTThread = new Thread(uofTScraper);
+        scraperThreads.add(uOfTThread);
         uOfTThread.start();
 
         McMasterScraper mcMasterScraper = new McMasterScraper();
         Thread mcMasterThread = new Thread(mcMasterScraper);
+        scraperThreads.add(mcMasterThread);
         mcMasterThread.start();
 
         UBCScraper uBCScraper = new UBCScraper();
         Thread ubcScraperThread = new Thread(uBCScraper);
+        scraperThreads.add(ubcScraperThread);
         ubcScraperThread.start();
 
-        while(waterlooThread.isAlive() || uOfTThread.isAlive() || mcMasterThread.isAlive() || ubcScraperThread.isAlive()){
-
+        //Shaya, if you want to you can remove this try-catch block if you want to
+        //I'm just not sure if you prefer this or adding exception signature to the method
+        //It's your choice
+        for (Thread thread : scraperThreads) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
         //Adds everything (WILL BE MOVED SERVERSIDE LATER)

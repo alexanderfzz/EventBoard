@@ -22,14 +22,14 @@ public class Main {
         mcMasterScrapeThread.start();
 
         uBCScraper = new UBCScraper();
-        Thread ubcScraperThread = new Thread(uBCScraper);
-        ubcScraperThread.start();
+        Thread uBCScrapeThread = new Thread(uBCScraper);
+        uBCScrapeThread.start();
 
-        //OPTIMIZE: remove the "and" from the title of the waterloo event
 
-        //TODO: create word filter for UBC focus
+        //TODO: improve word filter for McMaster focus
+        //TODO: change the focus attribute to a list of Strings
 
-        //FIXME: AHHHHHHHHHHHHH!! While it's true that age is no guarantee of efficiency, and youth is no guarantee of innovation
+        //OPTIMIZE: currently Shaya is creating another program object after the date is formatted, this is not efficient, format the date before creating the first batch of object would be better, do that
 
     }
 }

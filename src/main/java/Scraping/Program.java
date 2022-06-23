@@ -87,7 +87,7 @@ public class Program {
         if(dates.isEmpty() || dates.get(0).equals("")){
             return "Undetermined";
         }
-        return "".join(",", dates);
+        return String.join(",", dates);
     }
 
     public void setDates(LinkedList<String> dates) {
