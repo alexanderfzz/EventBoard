@@ -114,19 +114,19 @@ public class ProgramDAO extends JdbcDaoSupport {
                 System.out.println("Program not found... Added to Database...");
             }
             else { //ERROR, PLZ FIX SOON :) (Specifically, when updating you update everything and not the specific program that requires the update :( )
-                String updateProgramSQL = "UPDATE Programs SET Topic = '" +
-                        program.getTopic() +
-                        "', Link = '" +
-                        program.getLink() +
-                        "', Audience = '" +
-                        program.getAudiences() +
-                        "', Description = '" +
-                        program.getOverview() +
-                        "', Dates = '" +
-                        program.getDates() +
-                        "'";
-                jdbcTemplate.update(updateProgramSQL);
-                System.out.println("Program found... Updated Database with new data...");
+//                String updateProgramSQL = "UPDATE Programs WHERE '"  + "' SET Topic = '" +
+//                        program.getTopic() +
+//                        "', Link = '" +
+//                        program.getLink() +
+//                        "', Audience = '" +
+//                        program.getAudiences() +
+//                        "', Description = '" +
+//                        program.getOverview() +
+//                        "', Dates = '" +
+//                        program.getDates() +
+//                        "'";
+//                jdbcTemplate.update(updateProgramSQL);
+//                System.out.println("Program found... Updated Database with new data...");
             }
 
             //removePrograms(programRows, programList);
