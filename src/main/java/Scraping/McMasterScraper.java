@@ -16,41 +16,56 @@ import java.util.stream.Collectors;
 public class McMasterScraper implements Runnable {
     private WebClient webClient;
     private HtmlPage page;
-    private String url;
-    private static final List<Program> programs = Collections.synchronizedList(new LinkedList<>());
-    private static final Set<String> hrefSet = ConcurrentHashMap.newKeySet();
+    private static final List<Program> programs;
+    private static final Set<String> hrefSet;
+
+    static {
+        programs = Collections.synchronizedList(new LinkedList<>());
+        hrefSet = ConcurrentHashMap.newKeySet();
+    }
 
     public McMasterScraper() throws IOException {
         this.webClient = new WebClient();
         this.webClient.getOptions().setCssEnabled(false);
         this.webClient.getOptions().setJavaScriptEnabled(false);
-        this.url = "https://youthprograms.eng.mcmaster.ca/programs/list";
-        this.page = this.webClient.getPage(this.url);
+        String url = "https://youthprograms.eng.mcmaster.ca/programs/list";
+        this.page = this.webClient.getPage(url);
     }
 
     @Override
     public void run() {
         List<HtmlListItem> pages = page.getByXPath("//div[@class = 'item-list']/ul/li");
         LinkedList<Thread> threads = new LinkedList<>();
-        int totalPages = pages.size()-2 <= 0 ? pages.size() : pages.size()-2;
+        int totalPages = pages.size() - 2 <= 0 ? pages.size() : pages.size() - 2;
+        for (int i = 0; i < totalPages; i++) {
+            McMasterPageScraper mcMasterPageScraper = null;
+            try {
+                mcMasterPageScraper = new McMasterPageScraper("https://youthprograms.eng.mcmaster.ca/programs/list?page=" + i);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            Thread pageScraperThread = new Thread(mcMasterPageScraper);
+            threads.add(pageScraperThread);
+            pageScraperThread.start();
+        }
+
+        for (Thread thread : threads) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
 
         try {
-            for (int i=0; i<totalPages; i++) {
-                McMasterPageScraper mcMasterPageScraper = new McMasterPageScraper("https://youthprograms.eng.mcmaster.ca/programs/list?page="+i);
-                Thread pageScraperThread = new Thread(mcMasterPageScraper);
-                threads.add(pageScraperThread);
-                pageScraperThread.start();
-            }
-            for (Thread thread : threads) {
-                thread.join();
-            }
             export();
-        } catch (IOException | InterruptedException e) {
+        } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
+
     }
 
-    public void export() throws JsonProcessingException {
+    private static void export() throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
         for (Program i : programs) {
             System.out.println(Toolbox.ObjectToJSON(objectMapper, i));
@@ -65,16 +80,26 @@ public class McMasterScraper implements Runnable {
     private static class McMasterPageScraper implements Runnable {
         private WebClient webClient;
         private HtmlPage page;
-        private String url;
-        private final Set<String> focusFilter = new HashSet<>(List.of(new String[]{"engineering", "science", "math", "technology", "coding", "leaders"}));
-        private final String[] audienceFilter = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "/", "-", "K", "(", ")"};
+        private static final HashMap<String, String> focusFilter;
+        private static final String[] audienceFilter;
 
-        public McMasterPageScraper(String url) throws IOException {
+        static {
+            focusFilter = new HashMap<>();
+            focusFilter.put("engineering", "Engineering");
+            focusFilter.put("science", "Science");
+            focusFilter.put("math", "Math");
+            focusFilter.put("technology", "Technology");
+            focusFilter.put("coding", "Coding");
+            focusFilter.put("leaders", "Leadership");
+            focusFilter.put("stem", "STEM");
+            audienceFilter = new String[]{"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "/", "-", "K", "(", ")"};
+        }
+
+        private McMasterPageScraper(String url) throws IOException {
             this.webClient = new WebClient();
-            this.url = url;
             this.webClient.getOptions().setCssEnabled(false);
             this.webClient.getOptions().setJavaScriptEnabled(false);
-            this.page = this.webClient.getPage(this.url);
+            this.page = this.webClient.getPage(url);
         }
 
         @Override
@@ -86,8 +111,9 @@ public class McMasterScraper implements Runnable {
 
                 //intersection
                 Set<String> titleSet = new HashSet<>(Arrays.asList(currentTitle.toLowerCase().split(" ")));
-                titleSet.retainAll(focusFilter);
-                String focus = String.join("/", titleSet.toArray(new String[0]));
+                titleSet.retainAll(focusFilter.keySet());
+                titleSet = titleSet.stream().map(s -> s = focusFilter.get(s)).collect(Collectors.toSet());
+                LinkedList<String> focus = new LinkedList<>(titleSet);
 
                 String[] titleArray = currentTitle.split(" ");
                 boolean valid = false;
@@ -95,7 +121,7 @@ public class McMasterScraper implements Runnable {
                     valid = titleArray[titleArray.length - 1].contains(s);
                     if (valid) break;
                 }
-                String audiences = valid ? titleArray[titleArray.length-1].replace("(", "").replace(")", "") : "";
+                String audiences = valid ? titleArray[titleArray.length - 1].replace("(", "").replace(")", "") : "";
 
                 //nav to subpage
                 HtmlAnchor subpage = (HtmlAnchor) page.getByXPath(apath).get(0);
@@ -106,8 +132,14 @@ public class McMasterScraper implements Runnable {
                     e.printStackTrace();
                 }
 
-                String overview = String.valueOf(page.getByXPath("//div[@class = 'content']/div/div/div[@class = 'row']/div/p[2]/text()").get(0));
                 String href = this.page.getUrl().toString();
+
+                if (!Toolbox.isNotDuplicate(hrefSet, href)) {
+                    this.page = masterPage;
+                    continue;
+                }
+
+                String overview = String.valueOf(page.getByXPath("//div[@class = 'content']/div/div/div[@class = 'row']/div/p[2]/text()").get(0));
                 LinkedList<String> dates = page.getByXPath("//div[@class = 'content']/div/div/div[@class = 'row']/div/div/div[@class = 'view-content']/table/tbody/tr/td[@class = 'lead']/strong/text()")
                         .stream()
                         .map(o -> (DomText) o)
@@ -116,9 +148,8 @@ public class McMasterScraper implements Runnable {
                 //nav back to masterPage
                 this.page = masterPage;
 
-                if (Toolbox.isNotDuplicate(hrefSet, href)) {
-                    programs.add(new Program("McMaster", focus, currentTitle, href, audiences, dates, overview));
-                }
+                programs.add(new Program("McMaster", focus, currentTitle, href, audiences, dates, overview));
+
             }
         }
     }

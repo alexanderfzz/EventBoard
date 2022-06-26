@@ -143,15 +143,16 @@ public class ProgramDAO extends JdbcDaoSupport {
 
         List<Program> result = new ArrayList<>();
         for(Map<String, Object> row:rows){
-            Program program = new Program(
-                    (String)uniRows.get(Integer.parseInt(String.valueOf((long)row.get("UniversityID")-1))).get("UniversityName"),
-                    (String)row.get("Topic"),
-                    (String)row.get("Title"),
-                    (String)row.get("Link"),
-                    (String)row.get("Audience"),
-                    (String)row.get("Dates"),
-                    (String)row.get("Description"));
-            result.add(program);
+            //FIXME: I (Alex) commented this out because it was causing issues after the refactor work
+//            Program program = new Program(
+//                    (String)uniRows.get(Integer.parseInt(String.valueOf((long)row.get("UniversityID")-1))).get("UniversityName"),
+//                    (String)row.get("Topic"),
+//                    (String)row.get("Title"),
+//                    (String)row.get("Link"),
+//                    (String)row.get("Audience"),
+//                    (String)row.get("Dates"),
+//                    (String)row.get("Description"));
+//            result.add(program);
         }
         return result;
 

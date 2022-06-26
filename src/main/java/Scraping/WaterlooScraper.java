@@ -10,20 +10,25 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class WaterlooScraper implements Runnable {
     private WebClient webClient;
     private HtmlPage page;
-    private String url;
-    private static final List<Program> programs = new LinkedList<>();
-    private static final Set<String> hrefSet = new HashSet<>();
+    private static final List<Program> programs;
+    private static final Set<String> hrefSet;
+
+    static {
+        programs = new LinkedList<>();
+        hrefSet = new HashSet<>();
+    }
 
     public WaterlooScraper() throws IOException {
         this.webClient = new WebClient();
         this.webClient.getOptions().setCssEnabled(false);
         this.webClient.getOptions().setJavaScriptEnabled(false);
-        this.url = "https://uwaterloo.ca/future-students/visit-waterloo/high-school-enrichment-programs";
-        this.page = this.webClient.getPage(this.url);
+        String url = "https://uwaterloo.ca/future-students/visit-waterloo/high-school-enrichment-programs";
+        this.page = this.webClient.getPage(url);
     }
 
     @Override
@@ -35,24 +40,31 @@ public class WaterlooScraper implements Runnable {
             String apath = String.format("//table[@class = 'tablesaw tablesaw-stack']/tbody/tr/td[1]/a[text() = '%s']", currentTitle);
 
             String href = ((DomAttr) page.getByXPath(apath + "/@href").get(0)).getValue();
+
+            if (!Toolbox.isNotDuplicate(hrefSet, href)) {
+                continue;
+            }
+
             String audiences = page.getByXPath(apath + "/ancestor::tr/td[2]/text()").get(0).toString();
             LinkedList<String> dates = new LinkedList<>();
             dates.add(page.getByXPath(apath + "/ancestor::tr/td[3]/text()").get(0).toString());
             String overview = page.getByXPath(apath + "/ancestor::tr/td[4]/text()").get(0).toString();
-            String focus = ((HtmlElement) page.getByXPath(apath + "/ancestor::tr/th").get(0)).getTextContent();
+            String focusAsString = ((HtmlElement) page.getByXPath(apath + "/ancestor::tr/th").get(0)).getTextContent();
+            LinkedList<String> focus = Arrays.stream(focusAsString.split("\sand\s|,"))
+                    .map(String::trim)
+                    .collect(Collectors.toCollection(LinkedList::new));
+            focus.removeAll(List.of(new String[]{""}));
 
-            if (Toolbox.isNotDuplicate(hrefSet, href)) {
-                programs.add(new Program("Waterloo", focus, currentTitle.replace("and", "").trim(), href, audiences, dates, overview));
-            }
+            programs.add(new Program("Waterloo", focus, currentTitle.replace("and", "").trim(), href, audiences, dates, overview));
         }
         try {
-            this.export();
+            export();
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
     }
 
-    public void export() throws JsonProcessingException {
+    private static void export() throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
         for (Program i : programs) {
             System.out.println(Toolbox.ObjectToJSON(objectMapper, i));

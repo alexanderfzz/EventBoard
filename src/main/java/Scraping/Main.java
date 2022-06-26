@@ -25,10 +25,6 @@ public class Main {
         Thread uBCScrapeThread = new Thread(uBCScraper);
         uBCScrapeThread.start();
 
-
-        //TODO: improve word filter for McMaster focus
-        //TODO: change the focus attribute to a list of Strings
-
         //OPTIMIZE: currently Shaya is creating another program object after the date is formatted, this is not efficient, format the date before creating the first batch of object would be better, do that
 
     }

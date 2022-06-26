@@ -10,14 +10,14 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class UBCScraper implements Runnable {
-    private WebClient webClient;
-    private HtmlPage page;
-    private String url;
-    private static final List<Program> programs = Collections.synchronizedList(new LinkedList<>());
-    private static final Set<String> hrefSet = ConcurrentHashMap.newKeySet();
-    private static final HashMap<String, String> focusFilter = new HashMap<>();
+    private static final List<Program> programs;
+    private static final Set<String> hrefSet;
+    private static final HashMap<String, String> focusFilter;
 
     static {
+        programs = Collections.synchronizedList(new LinkedList<>());
+        hrefSet = ConcurrentHashMap.newKeySet();
+        focusFilter = new HashMap<>();
         focusFilter.put("digital media", "Digital Media");
         focusFilter.put("entrepreneurship", "Business");
         focusFilter.put("business", "Business");
@@ -42,36 +42,50 @@ public class UBCScraper implements Runnable {
         focusFilter.put("psychology", "Social Science");
     }
 
-    public UBCScraper() throws IOException {
-        this.webClient = new WebClient();
-        this.webClient.getOptions().setCssEnabled(false);
-        this.webClient.getOptions().setJavaScriptEnabled(false);
-        this.url = "https://extendedlearning.ubc.ca/programs/future-global-leaders";
-        this.page = this.webClient.getPage(this.url);
+    public UBCScraper() {
     }
 
     @Override
     public void run() {
         LinkedList<Thread> threads = new LinkedList<>();
+        UBCOnlineScraper uBCOnlineScraper = null;
         try {
-            UBCOnlineScraper uBCOnlineScraper = new UBCOnlineScraper();
-            Thread onlineScraperThread = new Thread(uBCOnlineScraper);
-            threads.add(onlineScraperThread);
-            onlineScraperThread.start();
-            UBCOnCampusScraper uBCOnCampusScraper = new UBCOnCampusScraper();
-            Thread onCampusScraperThread = new Thread(uBCOnCampusScraper);
-            threads.add(onCampusScraperThread);
-            onCampusScraperThread.start();
-            for (Thread thread : threads) {
+            uBCOnlineScraper = new UBCOnlineScraper();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Thread onlineScraperThread = new Thread(uBCOnlineScraper);
+        threads.add(onlineScraperThread);
+        onlineScraperThread.start();
+
+        UBCOnCampusScraper uBCOnCampusScraper = null;
+        try {
+            uBCOnCampusScraper = new UBCOnCampusScraper();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Thread onCampusScraperThread = new Thread(uBCOnCampusScraper);
+        threads.add(onCampusScraperThread);
+        onCampusScraperThread.start();
+
+        for (Thread thread : threads) {
+            try {
                 thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
+        }
+
+        try {
             export();
-        } catch (IOException | InterruptedException e) {
+        } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
     }
 
-    private static void baseScrape(HtmlPage page, String topic, String format) {
+    private static void baseScrape(HtmlPage page, String topicAsString, String format) {
         String apath = "//div/div/div[@id = 'content']/section[@class = 'region-main']";
         String title = ((DomText) page.getFirstByXPath(apath + "/h1/text()")).getWholeText();
         String audiences = "ages" + ((DomText) page.getFirstByXPath("//article/div/p[1]/em[2]/text()")).getWholeText().split("ages")[1].replace(".", "");
@@ -84,24 +98,27 @@ public class UBCScraper implements Runnable {
             DomText lastDate = page.getFirstByXPath("//section/div/div/div[2]/div[" + (i + 1) + "]/div/span/div[1]/span[2]/text()");
             dates.add(firstDate.getWholeText() + "-" + lastDate);
         }
-        if (topic.equals("")) {
+        LinkedList<String> topic;
+        if (topicAsString.equals("")) {
             topic = applyFocusFilter(title);
+        } else {
+            topic = new LinkedList<>();
+            topic.add(title);
         }
         programs.add(new Program("UBC", topic, format + " " + title, page.getBaseURI(), audiences, dates, overview));
     }
 
-    public static String applyFocusFilter(String title) {
-        //TODO: this
+    private static LinkedList<String> applyFocusFilter(String title) {
         Set<String> focusSet = new HashSet<>();
         for (String keyword : focusFilter.keySet()) {
             if (title.toLowerCase().contains(keyword)) {
                 focusSet.add(focusFilter.get(keyword));
             }
         }
-        return String.join("/",focusSet);
+        return new LinkedList<>(focusSet);
     }
 
-    public void export() throws JsonProcessingException {
+    private static void export() throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
         for (Program i : programs) {
             System.out.println(Toolbox.ObjectToJSON(objectMapper, i));
@@ -113,15 +130,15 @@ public class UBCScraper implements Runnable {
     }
 
 
-    public static class UBCOnCampusScraper implements Runnable {
+    private static class UBCOnCampusScraper implements Runnable {
         private WebClient webClient;
         private HtmlPage page;
-        private String url = "https://extendedlearning.ubc.ca/programs/future-global-leaders-oncampus/registration-dates";
 
-        public UBCOnCampusScraper() throws IOException {
+        private UBCOnCampusScraper() throws IOException {
             this.webClient = new WebClient();
             this.webClient.getOptions().setCssEnabled(false);
             this.webClient.getOptions().setJavaScriptEnabled(false);
+            String url = "https://extendedlearning.ubc.ca/programs/future-global-leaders-oncampus/registration-dates";
             this.page = this.webClient.getPage(url);
         }
 
@@ -129,12 +146,11 @@ public class UBCScraper implements Runnable {
         public void run() {
             List<HtmlTableRow> tableRows = page.getByXPath("//div/div[4]/table/tbody[1]/tr");
             processTableRowList(tableRows, this.webClient);
-            //TODO: this second table also needs a filter for the topic attribute
             tableRows = page.getByXPath("//div/div[4]/table/tbody[2]/tr");
             processTableRowList(tableRows, this.webClient);
         }
 
-        public static void processTableRowList(List<HtmlTableRow> tableRows, WebClient webClient) {
+        private static void processTableRowList(List<HtmlTableRow> tableRows, WebClient webClient) {
             String currentFocus = "";
             for (HtmlTableRow htmlTableRow : tableRows) {
                 String classAttr = htmlTableRow.getAttribute("class");
@@ -145,29 +161,29 @@ public class UBCScraper implements Runnable {
                 Iterable<DomElement> iterable = htmlTableRow.getChildElements();
                 Iterator<DomElement> iter = iterable.iterator();
                 iter.next();
-                try {
-                    while (iter.hasNext()) {
-                        DomElement currentChildNode = iter.next();
-                        DomElement a = currentChildNode.getFirstElementChild();
-                        if (a != null && Toolbox.isNotDuplicate(hrefSet, "https://extendedlearning.ubc.ca" + a.getAttribute("href"))) {
+                while (iter.hasNext()) {
+                    DomElement currentChildNode = iter.next();
+                    DomElement a = currentChildNode.getFirstElementChild();
+                    if (a != null && Toolbox.isNotDuplicate(hrefSet, "https://extendedlearning.ubc.ca" + a.getAttribute("href"))) {
+                        try {
                             baseScrape(webClient.getPage("https://extendedlearning.ubc.ca" + a.getAttribute("href")), currentFocus, "(On-Campus)");
+                        } catch (IOException e) {
+                            e.printStackTrace();
                         }
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
             }
         }
     }
 
 
-    public static class UBCOnlineScraper implements Runnable {
+    private static class UBCOnlineScraper implements Runnable {
         private WebClient webClient;
         private HtmlPage page;
         private String summerUrl = "https://extendedlearning.ubc.ca/programs/future-global-leaders-online-summer";
         private String fallUrl = "https://extendedlearning.ubc.ca/programs/future-global-leaders-online-fall";
 
-        public UBCOnlineScraper() throws IOException {
+        private UBCOnlineScraper() throws IOException {
             this.webClient = new WebClient();
             this.webClient.getOptions().setCssEnabled(false);
             this.webClient.getOptions().setJavaScriptEnabled(false);
@@ -177,33 +193,32 @@ public class UBCScraper implements Runnable {
         @Override
         public void run() {
             List<HtmlAnchor> anchors = page.getByXPath("//*[@id='fgl-terms']/div/div/div[2]/p[2]/a");
-            HtmlPage masterPage = this.page;
-            processAnchorList(this.webClient, this.page, anchors);
-            this.page = masterPage;
+            processAnchorList(this.webClient, anchors);
             anchors = page.getByXPath("//*[@id='fgl-page']/div/div/div/div[2]/div[2]/p/a");
-            processAnchorList(this.webClient, this.page, anchors);
+            processAnchorList(this.webClient, anchors);
             try {
                 this.page = this.webClient.getPage(fallUrl);
-                anchors = page.getByXPath("//*[@id='fgl-terms']/div/div/div[2]/p[2]/a");
-                processAnchorList(this.webClient, this.page, anchors);
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            anchors = page.getByXPath("//*[@id='fgl-terms']/div/div/div[2]/p[2]/a");
+            processAnchorList(this.webClient, anchors);
         }
 
-        private static void processAnchorList(WebClient webClient, HtmlPage page, List<HtmlAnchor> anchors) {
-            try {
-                for (HtmlAnchor anchor : anchors) {
-                    String absoluteURL = "https://extendedlearning.ubc.ca" + anchor.getHrefAttribute();
-                    if (!Toolbox.isNotDuplicate(hrefSet, absoluteURL)) {
-                        continue;
-                    }
-                    page = webClient.getPage(absoluteURL);
-                    //TODO: create filter for topic attribute
-                    baseScrape(page, "", "(Online)");
+        private static void processAnchorList(WebClient webClient, List<HtmlAnchor> anchors) {
+            for (HtmlAnchor anchor : anchors) {
+                String absoluteURL = "https://extendedlearning.ubc.ca" + anchor.getHrefAttribute();
+                if (!Toolbox.isNotDuplicate(hrefSet, absoluteURL)) {
+                    continue;
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
+                HtmlPage page = null;
+                try {
+                    page = webClient.getPage(absoluteURL);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                assert page != null;
+                baseScrape(page, "", "(Online)");
             }
         }
     }

@@ -4,20 +4,20 @@ import java.util.LinkedList;
 
 public class Program {
     private final String university;
-    private String topic, title, link, audiences, overview, formattedDate;
-    private LinkedList<String> dates;
+    private String title, link, audiences, overview, formattedDate;
+    private LinkedList<String> topic, dates;
 
     public Program() {
         this.university = "";
-        this.topic = "";
+        this.topic = new LinkedList<>();
         this.title = "";
         this.link = "";
         this.audiences = "";
-        this.dates = new LinkedList<String>();
+        this.dates = new LinkedList<>();
         this.overview = "";
     }
 
-    public Program(String university, String topic, String title, String link, String audiences, LinkedList<String> dates, String overview) {
+    public Program(String university, LinkedList<String> topic, String title, String link, String audiences, LinkedList<String> dates, String overview) {
         this.university = university;
         this.topic = topic;
         this.title = title;
@@ -26,7 +26,7 @@ public class Program {
         this.dates = dates;
         this.overview = overview;
     }
-    public Program(String university, String topic, String title, String link, String audiences, String date, String overview) {
+    public Program(String university, LinkedList<String> topic, String title, String link, String audiences, String date, String overview) {
         this.university = university;
         this.topic = topic;
         this.title = title;
@@ -43,11 +43,11 @@ public class Program {
         return university;
     }
 
-    public String getTopic() {
+    public LinkedList<String> getTopic() {
         return topic;
     }
 
-    public void setTopic(String topic) {
+    public void setTopic(LinkedList<String> topic) {
         this.topic = topic;
     }
 
